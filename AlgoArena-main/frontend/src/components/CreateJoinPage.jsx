@@ -10,22 +10,43 @@ const CreateJoinPage = () => {
   const navigate = useNavigate();
   const [roomIdInput, setRoomIdInput] = useState("");
   const [previousRooms, setPreviousRooms] = useState([]);
-  const username = localStorage.getItem("username") || "Guest";
+  const [username, setUsername] = useState("Guest");
 
   useEffect(() => {
-    const storedRooms = JSON.parse(localStorage.getItem("previousRooms")) || [];
-    setPreviousRooms(storedRooms);
+    try {
+      // Safely get username
+      const storedUsername = localStorage.getItem("username");
+      if (storedUsername) {
+        setUsername(storedUsername);
+      }
+
+      // Safely get previous rooms
+      const storedRooms = localStorage.getItem("previousRooms");
+      if (storedRooms) {
+        const parsedRooms = JSON.parse(storedRooms);
+        setPreviousRooms(Array.isArray(parsedRooms) ? parsedRooms : []);
+      }
+    } catch (error) {
+      console.error("Error loading data:", error);
+      setPreviousRooms([]);
+    }
   }, []);
 
   const handleCreateRoom = async () => {
     try {
       const response = await createRoom();
       const { roomId } = response.data;
-      const updatedRooms = [roomId, ...previousRooms];
-      localStorage.setItem("previousRooms", JSON.stringify(updatedRooms));
-      setPreviousRooms(updatedRooms);
+      
+      try {
+        const updatedRooms = [roomId, ...previousRooms];
+        localStorage.setItem("previousRooms", JSON.stringify(updatedRooms));
+        setPreviousRooms(updatedRooms);
+      } catch (storageError) {
+        console.error("Storage error:", storageError);
+      }
+      
       navigate(`/room/${roomId}`);
-      toast.success("New room created successfully!");  //toast message(room success)
+      toast.success("New room created successfully!");
     } catch (error) {
       console.error("Error creating room:", error);
       toast.error("Failed to create room. Please try again.");
@@ -33,13 +54,24 @@ const CreateJoinPage = () => {
   };
 
   const handleJoinRoom = async () => {
+    if (!roomIdInput.trim()) {
+      toast.error("Please enter a room ID");
+      return;
+    }
+
     try {
       await joinRoom(roomIdInput);
-      if (!previousRooms.includes(roomIdInput)) {
-        const updatedRooms = [roomIdInput, ...previousRooms];
-        localStorage.setItem("previousRooms", JSON.stringify(updatedRooms));
-        setPreviousRooms(updatedRooms);
+      
+      try {
+        if (!previousRooms.includes(roomIdInput)) {
+          const updatedRooms = [roomIdInput, ...previousRooms];
+          localStorage.setItem("previousRooms", JSON.stringify(updatedRooms));
+          setPreviousRooms(updatedRooms);
+        }
+      } catch (storageError) {
+        console.error("Storage error:", storageError);
       }
+      
       navigate(`/room/${roomIdInput}`);
     } catch (error) {
       console.error("Error joining room:", error);
@@ -48,23 +80,27 @@ const CreateJoinPage = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("username");
-    localStorage.removeItem("token")
+    try {
+      localStorage.removeItem("username");
+      localStorage.removeItem("token");
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
     navigate("/login");
   };
 
   return (
     <div className="container">
-    <ToastContainer
-      position="top-center"
-      autoClose={3000}
-      hideProgressBar={false}
-      newestOnTop={true}
-      closeOnClick
-      rtl={false}
-      pauseOnFocusLoss
-      draggable
-      pauseOnHover
+      <ToastContainer
+        position="top-center"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
       />
       <div className="navbar">
         <div className="navLeft">
@@ -79,7 +115,12 @@ const CreateJoinPage = () => {
         </div>
         <div className="navRight">
           <div className="userMenu">
-          <div className="userIcon" title="User Options" onClick={() => navigate("/profile")} style={{ cursor: "pointer" }}>
+            <div 
+              className="userIcon" 
+              title="User Options" 
+              onClick={() => navigate("/profile")} 
+              style={{ cursor: "pointer" }}
+            >
               👤 {username}
             </div>
             <button onClick={handleLogout} className="logoutButton">

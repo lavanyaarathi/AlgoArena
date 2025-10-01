@@ -5,7 +5,6 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "../App.css";
 
-
 const SignupPage = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -14,11 +13,9 @@ const SignupPage = () => {
 
   const handleSignup = async (e) => {
     e.preventDefault();
+
     if (!username || !email || !password) {
-      toast.error("Please fill all fields",{
-        position:"top-right",
-        autoClose:3000,
-      });
+      toast.error("Please fill all fields", { autoClose: 3000 });
       return;
     }
 
@@ -28,18 +25,28 @@ const SignupPage = () => {
         email,
         password,
       });
-      alert(response.data.message);
-      if (response.data.username) {
+
+      // Store username and token in localStorage
+      if (response.data.username && response.data.token) {
         localStorage.setItem("username", response.data.username);
-        localStorage.setItem("token",response.data.token)
+        localStorage.setItem("token", response.data.token);
       }
-      navigate("/create-join"); // Redirect to login page after signup
+
+      toast.success(response.data.message || "Signup successful!", {
+        autoClose: 3000,
+      });
+
+      navigate("/create-join"); // redirect to main page
     } catch (error) {
       console.error("Signup error:", error);
-      toast.error("Signup failed. Email might already be in use.",{
-        position:"top-right",
-        autoClose:3000,
-      });
+
+      let errorMessage = "Signup failed. Please try again.";
+      if (error.response && error.response.data) {
+        errorMessage =
+          error.response.data.message || JSON.stringify(error.response.data);
+      }
+
+      toast.error(errorMessage, { autoClose: 3000 });
     }
   };
 
@@ -47,39 +54,42 @@ const SignupPage = () => {
     <div className="signup-container">
       <form onSubmit={handleSignup} className="signup-form">
         <h1 className="signup-heading">Signup</h1>
+
         <input
           type="text"
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          required
           className="signup-input"
         />
+
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          required
           className="signup-input"
         />
+
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          required
           className="signup-input"
         />
+
         <button type="submit" className="signup-button">
           Signup
         </button>
       </form>
+
       <div className="login-button-container">
         <button className="login-button" onClick={() => navigate("/login")}>
           Login
         </button>
       </div>
+
       <ToastContainer />
     </div>
   );
