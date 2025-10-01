@@ -4,6 +4,7 @@
   "description": "\"For real time collabartive code editor\"",
   "main": "index.js",
   "scripts": {
+    "start":"node index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npm install && "
   },
@@ -19,6 +20,8 @@
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "uuid": "^11.0.5",
+    "y-websocket": "^3.0.0",
+    "yjs": "^13.6.27",
     "zod": "^3.24.2"
   }
 }

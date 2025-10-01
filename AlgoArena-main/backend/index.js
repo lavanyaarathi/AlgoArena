@@ -1,7 +1,9 @@
 const express = require("express");
 const FullRoute = require("./routes/index");
 const cors = require("cors");
-const { default: setupSocket } = require("./socket");
+require('dotenv').config();
+
+const setupSocket = require('./socket'); // no curly braces
 
 const app = express();
 
